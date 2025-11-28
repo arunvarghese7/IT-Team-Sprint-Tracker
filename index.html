@@ -62,17 +62,6 @@
         -webkit-backdrop-filter: blur(12px);
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       }
-
-      /* Loader Animation */
-      .loader {
-        border: 2px solid #27272a;
-        border-top: 2px solid #FFC300;
-        border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        animation: spin 1s linear infinite;
-      }
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="font-sans antialiased min-h-screen flex flex-col">
@@ -131,8 +120,9 @@
                         <label id="engineerFilterLabel" class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Personnel</label>
                         <span class="text-[10px] text-gray-600 bg-executive-900 px-2 py-0.5 rounded border border-executive-800">Multi-select</span>
                     </div>
-                    <div id="engineerFilters" class="flex flex-wrap gap-2 max-h-24 overflow-y-auto pr-2 custom-scrollbar">
-                        </div>
+                    <div id="engineerFilters" class="flex flex-wrap gap-2 min-h-[40px] max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                        <span class="text-gray-600 text-sm italic py-2">Loading personnel...</span>
+                    </div>
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Status</label>
@@ -178,7 +168,7 @@
             APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbz1jIz73VKcat6GmkqovmqtXHyago4bimxxeaVWekniYU_lowq-e4t9FV1r2PSUqziIKw/exec', // Replace with your actual URL
             API_KEY: '98415623-a1d1-4045-84d3-c3e67fa687af',        // Replace with your actual Key
             REFRESH_INTERVAL: 300000,
-            ENABLE_DEMO: false, // Set to false to use live API
+            ENABLE_DEMO: true, // Set to false to use live API
             ORG_NAME: 'Your Organization'
         };
 
@@ -228,7 +218,15 @@
                 
                 // Possible variations for Agent/Engineer
                 if (fieldType === 'engineer') {
-                    return item['Engineer'] || item['engineer'] || item['Agent Name'] || item['agent_name'] || item['agent'] || item['Responder'] || 'Unassigned';
+                    // Try all common API variations
+                    return item['Engineer'] || 
+                           item['engineer'] || 
+                           item['Agent Name'] || 
+                           item['agent_name'] || 
+                           item['agent'] || 
+                           item['Responder'] || 
+                           item['responder_name'] ||
+                           'Unassigned';
                 }
                 
                 // Possible variations for Date
@@ -275,30 +273,33 @@
                         // Simulate network delay
                         await new Promise(r => setTimeout(r, 600)); 
                         this.data = this.currentSource === 'tracker' ? DEMO_DATA_TRACKER : DEMO_DATA_FRESHSERVICE;
-                        
-                        const engineerList = this.data.map(d => this.getFieldValue(d, 'engineer')).filter(n => n && n !== 'Unassigned');
-                        const statusList = this.data.map(d => d.Status).filter(Boolean);
-                        
-                        this.metadata = {
-                            engineers: [...new Set(engineerList)].sort(),
-                            statuses: [...new Set(statusList)].sort()
-                        };
                     } else {
-                        // ... Live API Fetch Logic (Same as before) ...
                          if (!CONFIG.APPS_SCRIPT_URL || !CONFIG.API_KEY) {
                             throw new Error('Missing CONFIG: APPS_SCRIPT_URL or API_KEY');
                         }
-                        const [dataRes, metaRes] = await Promise.all([
-                            fetch(`${CONFIG.APPS_SCRIPT_URL}?action=getData&source=${this.currentSource}&key=${CONFIG.API_KEY}`),
-                            fetch(`${CONFIG.APPS_SCRIPT_URL}?action=getMetadata&source=${this.currentSource}&key=${CONFIG.API_KEY}`)
-                        ]);
-                        const data = await dataRes.json();
-                        const meta = await metaRes.json();
-                        if (!data.success) throw new Error(data.message);
-                        if (!meta.success) throw new Error(meta.message);
-                        this.data = data.data;
-                        this.metadata = meta.data;
+                        // We ONLY fetch data, we will derive metadata manually to ensure consistency
+                        const response = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=getData&source=${this.currentSource}&key=${CONFIG.API_KEY}`);
+                        const result = await response.json();
+                        
+                        if (!result.success) throw new Error(result.message);
+                        this.data = result.data;
                     }
+
+                    // --- CRITICAL FIX: MANUALLY DERIVE METADATA FROM DATA ---
+                    // This ensures that if names appear in the data/cards, they MUST appear in filters.
+                    const distinctEngineers = [...new Set(this.data.map(item => this.getFieldValue(item, 'engineer')))]
+                        .filter(name => name && name !== 'Unassigned' && name.trim() !== '')
+                        .sort();
+
+                    const distinctStatuses = [...new Set(this.data.map(item => item.Status))]
+                        .filter(status => status && status.trim() !== '')
+                        .sort();
+
+                    this.metadata = {
+                        engineers: distinctEngineers,
+                        statuses: distinctStatuses
+                    };
+                    // --------------------------------------------------------
 
                     this.applyFilters();
                     this.render();
@@ -411,7 +412,6 @@
             }
 
             exportCSV() {
-                // ... same export logic ...
                  let headers, rows;
                 const source = this.currentSource;
                 if (source === 'freshservice') {
@@ -440,16 +440,26 @@
             }
 
             renderFilters() {
+                // Ensure the element exists before trying to fill it
+                const engContainer = document.getElementById('engineerFilters');
+                const statContainer = document.getElementById('statusFilters');
+                if(!engContainer || !statContainer) return;
+
                 const engineerList = this.metadata.engineers || [];
-                const engineerHTML = engineerList.map(eng => {
-                    const isActive = this.filters.engineers.includes(eng);
-                    return `
-                        <button class="px-3 py-1 text-xs font-medium rounded-full border transition-all duration-200 ${isActive ? 'bg-executive-gold text-executive-950 border-executive-gold' : 'bg-executive-900 text-gray-400 border-executive-800 hover:border-executive-700 hover:text-white'}" onclick="dashboard.toggleEngineerFilter('${eng}')">
-                            ${eng}
-                        </button>
-                    `;
-                }).join('');
-                document.getElementById('engineerFilters').innerHTML = engineerHTML;
+                
+                if (engineerList.length === 0) {
+                    engContainer.innerHTML = '<span class="text-gray-600 text-xs italic">No agents found in data</span>';
+                } else {
+                    const engineerHTML = engineerList.map(eng => {
+                        const isActive = this.filters.engineers.includes(eng);
+                        return `
+                            <button class="px-3 py-1 text-xs font-medium rounded-full border transition-all duration-200 ${isActive ? 'bg-executive-gold text-executive-950 border-executive-gold' : 'bg-executive-900 text-gray-400 border-executive-800 hover:border-executive-700 hover:text-white'}" onclick="dashboard.toggleEngineerFilter('${eng}')">
+                                ${eng}
+                            </button>
+                        `;
+                    }).join('');
+                    engContainer.innerHTML = engineerHTML;
+                }
 
                 const statusHTML = (this.metadata.statuses || []).map(status => {
                     const isActive = this.filters.statuses.includes(status);
@@ -459,7 +469,7 @@
                         </button>
                     `;
                 }).join('');
-                document.getElementById('statusFilters').innerHTML = statusHTML;
+                statContainer.innerHTML = statusHTML;
             }
 
             renderStats() {
