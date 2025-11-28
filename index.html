@@ -6,9 +6,7 @@
     <title>Executive Command | Team Tracker</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,17 +18,11 @@
         darkMode: 'class',
         theme: {
           extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-            },
+            fontFamily: { sans: ['Inter', 'sans-serif'] },
             colors: {
               executive: {
-                950: '#050507', 
-                900: '#0f0f13', 
-                800: '#27272a',
-                700: '#3f3f46', 
-                gold: '#FFC300',
-                goldDim: '#B38F00',
+                950: '#050507', 900: '#0f0f13', 800: '#27272a', 700: '#3f3f46',
+                gold: '#FFC300', goldDim: '#B38F00',
               }
             }
           }
@@ -39,11 +31,7 @@
     </script>
 
     <style>
-      body {
-        background-color: #050507;
-        color: #e4e4e7;
-      }
-      /* Custom Scrollbar */
+      body { background-color: #050507; color: #e4e4e7; }
       ::-webkit-scrollbar { width: 8px; height: 8px; }
       ::-webkit-scrollbar-track { background: #0f0f13; }
       ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
@@ -55,15 +43,20 @@
         -webkit-backdrop-filter: blur(12px);
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       }
+
+      /* Active Tile Styling */
+      .tile-active {
+        border-color: #FFC300 !important;
+        background: rgba(255, 195, 0, 0.05) !important;
+        transform: translateY(-2px);
+      }
       
-      /* Glowing Pulse Animation for the new card */
       @keyframes pulse-violet {
         0%, 100% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3); }
         50% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.25); border-color: rgba(139, 92, 246, 0.6); }
       }
-      .glow-card {
-        animation: pulse-violet 3s infinite;
-      }
+      .glow-card { animation: pulse-violet 3s infinite; }
+      .cursor-pointer { cursor: pointer; }
     </style>
 </head>
 <body class="font-sans antialiased min-h-screen flex flex-col">
@@ -90,16 +83,14 @@
                 <h2 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-2">Team Performance</h2>
                 <p class="text-zinc-400">Real-time operational intelligence and metric tracking.</p>
             </div>
-            
             <div class="bg-executive-900 p-1 rounded-lg border border-white/10 flex">
-                <button id="trackerToggle" onclick="dashboard.switchDataSource('tracker')" class="px-6 py-2 rounded-md text-sm font-medium transition-all text-zinc-400 hover:text-white">
-                    Team Tracker
-                </button>
-                <button id="freshserviceToggle" onclick="dashboard.switchDataSource('freshservice')" class="px-6 py-2 rounded-md text-sm font-medium transition-all text-zinc-400 hover:text-white">
-                    Freshservice
-                </button>
+                <button id="trackerToggle" onclick="dashboard.switchDataSource('tracker')" class="px-6 py-2 rounded-md text-sm font-medium transition-all text-zinc-400 hover:text-white">Team Tracker</button>
+                <button id="freshserviceToggle" onclick="dashboard.switchDataSource('freshservice')" class="px-6 py-2 rounded-md text-sm font-medium transition-all text-zinc-400 hover:text-white">Freshservice</button>
             </div>
         </div>
+
+        <div id="statsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div class="lg:col-span-1 space-y-4">
@@ -108,7 +99,7 @@
                     <input type="date" id="startDate" class="bg-executive-900 border border-white/10 rounded-lg px-4 py-2 text-sm text-gray-300 focus:outline-none focus:border-executive-gold focus:ring-1 focus:ring-executive-gold transition-colors">
                     <input type="date" id="endDate" class="bg-executive-900 border border-white/10 rounded-lg px-4 py-2 text-sm text-gray-300 focus:outline-none focus:border-executive-gold focus:ring-1 focus:ring-executive-gold transition-colors">
                     <div class="flex justify-between mt-2">
-                        <button onclick="dashboard.clearAllFilters()" class="text-xs text-zinc-500 hover:text-white underline decoration-dotted">Clear Filters</button>
+                        <button onclick="dashboard.clearAllFilters()" class="text-xs text-zinc-500 hover:text-white underline decoration-dotted">Reset View</button>
                         <button id="exportBtn" class="text-xs text-executive-gold hover:text-executive-goldDim font-medium flex items-center gap-1">
                             <i data-lucide="download" class="w-3 h-3"></i> CSV
                         </button>
@@ -119,31 +110,23 @@
             <div class="lg:col-span-3 space-y-4">
                 <div>
                     <div class="flex justify-between items-center mb-2">
-                        <label id="engineerFilterLabel" class="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Personnel</label>
+                        <label id="engineerFilterLabel" class="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Personnel Filter</label>
                         <span class="text-[10px] text-zinc-600 bg-executive-900 px-2 py-0.5 rounded border border-white/5">Multi-select</span>
                     </div>
                     <div id="engineerFilters" class="flex flex-wrap gap-2 min-h-[40px] max-h-32 overflow-y-auto pr-2 custom-scrollbar">
                         <span class="text-zinc-600 text-sm italic py-2">Loading personnel...</span>
                     </div>
                 </div>
-                <div>
-                    <label class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">Status</label>
-                    <div id="statusFilters" class="flex flex-wrap gap-2">
-                        </div>
-                </div>
             </div>
         </div>
 
-        <div id="statsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            </div>
-
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div class="bg-executive-900 border border-white/5 rounded-xl p-6 shadow-lg lg:col-span-1 flex flex-col">
-                <h3 class="text-lg font-bold text-white mb-6">Performance Distribution</h3>
+                <h3 class="text-lg font-bold text-white mb-6">Volume Distribution</h3>
                 <div class="relative h-64 w-full">
                     <canvas id="performanceChart"></canvas>
                 </div>
-                <div class="mt-4 text-xs text-zinc-500 text-center">Resolution rate by personnel</div>
+                <div class="mt-4 text-xs text-zinc-500 text-center">Sorted by total volume descending</div>
             </div>
 
             <div class="lg:col-span-2">
@@ -186,16 +169,17 @@
             { 'Task': 'Database Migration', 'Sub-Task': 'Schema', 'Engineer': 'Carol Davis', 'Status': 'Completed', 'Start Date': '2024-09-15', 'Closure Date': '2024-09-30', 'Blocker/Dependency': '' },
             { 'Task': 'Database Migration', 'Sub-Task': 'Data Transfer', 'Engineer': 'David Lee', 'Status': 'Blocked', 'Start Date': '2024-10-01', 'Closure Date': '', 'Blocker/Dependency': 'Waiting for approval' },
             { 'Task': 'Frontend Redesign', 'Sub-Task': 'Homepage', 'Engineer': 'Emma Wilson', 'Status': 'Completed', 'Start Date': '2024-11-01', 'Closure Date': '2024-11-10', 'Blocker/Dependency': '' },
-            { 'Task': 'Frontend Redesign', 'Sub-Task': 'Dashboard', 'Engineer': 'Frank Brown', 'Status': 'In Progress', 'Start Date': '2024-11-05', 'Closure Date': '', 'Blocker/Dependency': '' }
+            { 'Task': 'Frontend Redesign', 'Sub-Task': 'Dashboard', 'Engineer': 'Frank Brown', 'Status': 'In Progress', 'Start Date': '2024-11-05', 'Closure Date': '', 'Blocker/Dependency': '' },
+            { 'Task': 'Backend Ops', 'Sub-Task': 'Scaling', 'Engineer': 'Bob Smith', 'Status': 'Completed', 'Start Date': '2024-11-05', 'Closure Date': '', 'Blocker/Dependency': '' }
         ];
         
         const DEMO_DATA_FRESHSERVICE = [
-            { 'ID': 1001, 'Type': 'Incident', 'Status': 'Resolved', 'Priority': 'High', 'Subject': 'Network outage', 'Agent Name': 'Alice Johnson', 'Created Date': '2024-11-20 10:00', 'Resolved Date': '2024-11-20 14:30', 'Closed Date': '2024-11-21' },
-            { 'ID': 1002, 'Type': 'Service Request', 'Status': 'Open', 'Priority': 'Low', 'Subject': 'Laptop Request', 'Agent Name': 'Carol Davis', 'Created Date': '2024-11-27 09:00', 'Resolved Date': '', 'Closed Date': '' },
-            { 'ID': 1003, 'Type': 'Incident', 'Status': 'Resolved', 'Priority': 'Medium', 'Subject': 'Printer Issue', 'Agent Name': 'Bob Smith', 'Created Date': '2024-11-25 17:00', 'Resolved Date': '2024-11-26 11:00', 'Closed Date': '' }, 
-            { 'ID': 1004, 'Type': 'Service Request', 'Status': 'Closed', 'Priority': 'High', 'Subject': 'Software Install', 'Agent Name': 'Alice Johnson', 'Created Date': '2024-11-15 11:00', 'Resolved Date': '2024-11-16 12:00', 'Closed Date': '2024-11-16' },
-            { 'ID': 1005, 'Type': 'Problem', 'Status': 'On Hold', 'Priority': 'Medium', 'Subject': 'Server License', 'Agent Name': 'David Lee', 'Created Date': '2024-10-10', 'Resolved Date': '', 'Closed Date': '' },
-            { 'ID': 1006, 'Type': 'Incident', 'Status': 'Open', 'Priority': 'High', 'Subject': 'Website Error', 'Agent Name': 'David Lee', 'Created Date': '2024-11-28', 'Resolved Date': '', 'Closed Date': '' },
+            { 'ID': 1001, 'Type': 'Incident', 'Status': 'Resolved', 'Priority': 'High', 'Subject': 'Network outage in building A', 'Agent Name': 'Alice Johnson', 'Created Date': '2024-11-20 10:00', 'Resolved Date': '2024-11-20 14:00' },
+            { 'ID': 1002, 'Type': 'Service Request', 'Status': 'Open', 'Priority': 'Low', 'Subject': 'Request new laptop for Jane', 'Agent Name': 'Carol Davis', 'Created Date': '2024-11-27 09:00', 'Resolved Date': '' },
+            { 'ID': 1003, 'Type': 'Incident', 'Status': 'Pending', 'Priority': 'Medium', 'Subject': 'Printer in HR broken', 'Agent Name': 'Bob Smith', 'Created Date': '2024-11-28 10:00', 'Resolved Date': '' },
+            { 'ID': 1004, 'Type': 'Service Request', 'Status': 'Closed', 'Priority': 'High', 'Subject': 'Software installation request', 'Agent Name': 'Alice Johnson', 'Created Date': '2024-11-15 11:00', 'Resolved Date': '2024-11-16 12:00' },
+            { 'ID': 1005, 'Type': 'Problem', 'Status': 'On Hold', 'Priority': 'Medium', 'Subject': 'Server license issue', 'Agent Name': 'David Lee', 'Created Date': '2024-10-10 13:00', 'Resolved Date': '' },
+            { 'ID': 1006, 'Type': 'Incident', 'Status': 'Open', 'Priority': 'High', 'Subject': 'Critical website error', 'Agent Name': 'David Lee', 'Created Date': '2024-11-28 15:00', 'Resolved Date': '' },
         ];
 
         class Dashboard {
@@ -203,7 +187,8 @@
                 this.data = [];
                 this.filteredData = [];
                 this.metadata = { engineers: [], statuses: [] };
-                this.filters = { engineers: [], statuses: [], dateRange: { start: '', end: '' } };
+                // Removed 'statuses' from filters object, replaced with 'statusTile'
+                this.filters = { engineers: [], statusTile: null, dateRange: { start: '', end: '' } };
                 this.currentSource = 'tracker'; 
                 this.chartInstance = null;
                 this.init();
@@ -217,7 +202,7 @@
 
             getFieldValue(item, fieldType) {
                 if (!item) return '';
-                if (fieldType === 'engineer') return item['Engineer'] || item['engineer'] || item['Agent Name'] || item['agent_name'] || item['agent'] || item['Responder'] || 'Unassigned';
+                if (fieldType === 'engineer') return item['Engineer'] || item['engineer'] || item['Agent Name'] || item['agent_name'] || item['agent'] || 'Unassigned';
                 if (fieldType === 'date') return item['Start Date'] || item['start_date'] || item['Created Date'] || item['created_at'] || '';
                 return '';
             }
@@ -231,7 +216,7 @@
                 document.getElementById('tableTitle').textContent = source === 'tracker' ? 'Engineering Tasks' : 'Helpdesk Tickets';
                 document.getElementById('engineerFilterLabel').textContent = source === 'tracker' ? 'ENGINEERS' : 'AGENTS';
                 if (reload) {
-                    this.filters = { engineers: [], statuses: [], dateRange: { start: '', end: '' } };
+                    this.filters = { engineers: [], statusTile: null, dateRange: { start: '', end: '' } };
                     document.getElementById('startDate').value = '';
                     document.getElementById('endDate').value = '';
                     await this.loadData();
@@ -253,8 +238,8 @@
                         this.data = result.data;
                     }
                     const distinctEngineers = [...new Set(this.data.map(item => this.getFieldValue(item, 'engineer')))].filter(n => n && n !== 'Unassigned').sort();
-                    const distinctStatuses = [...new Set(this.data.map(item => item.Status))].filter(Boolean).sort();
-                    this.metadata = { engineers: distinctEngineers, statuses: distinctStatuses };
+                    this.metadata = { engineers: distinctEngineers };
+                    
                     this.applyFilters();
                     this.render();
                     document.getElementById('lastUpdate').textContent = 'Synced: ' + new Date().toLocaleTimeString();
@@ -262,16 +247,53 @@
                 finally { if(refreshIcon) refreshIcon.classList.remove('animate-spin'); }
             }
 
+            // === TILE INTERACTION LOGIC ===
+            toggleStatusTile(tileType) {
+                if (this.filters.statusTile === tileType) {
+                    this.filters.statusTile = null; // Deselect if already active
+                } else {
+                    this.filters.statusTile = tileType; // Set active
+                }
+                this.applyFilters();
+                this.render();
+            }
+
             applyFilters() {
                 let filtered = [...this.data];
-                if (this.filters.engineers.length > 0) filtered = filtered.filter(item => this.filters.engineers.includes(this.getFieldValue(item, 'engineer')));
-                if (this.filters.statuses.length > 0) filtered = filtered.filter(item => this.filters.statuses.includes(item.Status));
+
+                // 1. Status Tile Filter Logic
+                if (this.filters.statusTile) {
+                    const tile = this.filters.statusTile;
+                    if (tile === 'completed') {
+                         const match = this.currentSource === 'tracker' ? ['Completed'] : ['Resolved', 'Closed'];
+                         filtered = filtered.filter(d => match.includes(d.Status));
+                    } else if (tile === 'inprogress') {
+                         const match = this.currentSource === 'tracker' ? ['In Progress', 'Not Started'] : ['Open', 'Pending', 'On Hold'];
+                         filtered = filtered.filter(d => match.includes(d.Status));
+                    } else if (tile === 'blocked') {
+                        if (this.currentSource === 'tracker') {
+                             filtered = filtered.filter(d => d.Status === 'Blocked');
+                        } else {
+                             // High Priority Open for Freshservice
+                             filtered = filtered.filter(d => d.Status === 'Open' && d.Priority === 'High');
+                        }
+                    }
+                }
+
+                // 2. Engineer Filter
+                if (this.filters.engineers.length > 0) {
+                    filtered = filtered.filter(item => this.filters.engineers.includes(this.getFieldValue(item, 'engineer')));
+                }
+
+                // 3. Date Filter
                 if (this.filters.dateRange.start && this.filters.dateRange.end) {
                     const start = new Date(this.filters.dateRange.start);
                     const end = new Date(this.filters.dateRange.end);
                     filtered = filtered.filter(item => {
                         const dateStr = this.getFieldValue(item, 'date');
-                        return dateStr && new Date(dateStr) >= start && new Date(dateStr) <= end; 
+                        if(!dateStr) return false;
+                        const date = new Date(dateStr);
+                        return date >= start && date <= end; 
                     });
                 }
                 this.filteredData = filtered;
@@ -282,46 +304,55 @@
                 if (idx > -1) this.filters.engineers.splice(idx, 1); else this.filters.engineers.push(engineer);
                 this.applyFilters(); this.render();
             }
-            toggleStatusFilter(status) {
-                const idx = this.filters.statuses.indexOf(status);
-                if (idx > -1) this.filters.statuses.splice(idx, 1); else this.filters.statuses.push(status);
-                this.applyFilters(); this.render();
-            }
+
             clearAllFilters() {
-                this.filters = { engineers: [], statuses: [], dateRange: { start: '', end: '' } };
+                this.filters = { engineers: [], statusTile: null, dateRange: { start: '', end: '' } };
                 document.getElementById('startDate').value = ''; document.getElementById('endDate').value = '';
                 this.applyFilters(); this.render();
             }
 
+            // --- HELPER METRICS ---
             getMetrics() {
+                // Calculate metrics based on FULL data (or date-filtered data), 
+                // but NOT based on the current tile selection (otherwise tiles would zero out)
+                // We use a temporary filtered set that respects Date + Engineer but ignores Status Tile
+                let contextData = this.data;
+                
+                // We apply date and engineer filters to the metric counts so they reflect the "current view context"
+                if (this.filters.dateRange.start && this.filters.dateRange.end) {
+                     const start = new Date(this.filters.dateRange.start);
+                     const end = new Date(this.filters.dateRange.end);
+                     contextData = contextData.filter(item => {
+                        const d = this.getFieldValue(item, 'date');
+                        return d && new Date(d) >= start && new Date(d) <= end;
+                     });
+                }
+                if (this.filters.engineers.length > 0) {
+                     contextData = contextData.filter(item => this.filters.engineers.includes(this.getFieldValue(item, 'engineer')));
+                }
+
                 const completedStatuses = this.currentSource === 'freshservice' ? ['Resolved', 'Closed'] : ['Completed'];
                 const inProgressStatuses = this.currentSource === 'freshservice' ? ['Open', 'Pending', 'On Hold'] : ['In Progress', 'Not Started'];
-                const highPriorityOpenStatuses = this.currentSource === 'freshservice' ? this.filteredData.filter(d => d.Status === 'Open' && d.Priority === 'High') : [];
-                const completed = this.filteredData.filter(d => completedStatuses.includes(d.Status)).length;
-                const inProgress = this.filteredData.filter(d => inProgressStatuses.includes(d.Status)).length;
-                const blocked = this.currentSource === 'tracker' ? this.filteredData.filter(d => d.Status === 'Blocked').length : highPriorityOpenStatuses.length;
-                return { total: this.filteredData.length, completed, inProgress, blocked };
+                const highPriorityOpenStatuses = this.currentSource === 'freshservice' ? contextData.filter(d => d.Status === 'Open' && d.Priority === 'High') : [];
+                
+                return {
+                    total: contextData.length,
+                    completed: contextData.filter(d => completedStatuses.includes(d.Status)).length,
+                    inProgress: contextData.filter(d => inProgressStatuses.includes(d.Status)).length,
+                    blocked: this.currentSource === 'tracker' ? contextData.filter(d => d.Status === 'Blocked').length : highPriorityOpenStatuses.length
+                };
             }
 
-            // --- BUSINESS LOGIC FOR TIME CALCULATION ---
             getWorkingMinutes(startDate, endDate) {
                 let minutes = 0;
                 let current = new Date(startDate);
                 const end = new Date(endDate);
-
-                // Start/End Hours IST (10 AM to 6 PM)
-                const START_HOUR = 10;
-                const END_HOUR = 18;
-
+                const START_HOUR = 10; const END_HOUR = 18;
                 while (current < end) {
                     const day = current.getDay();
-                    // 0 = Sunday, 6 = Saturday. Skip weekends.
                     if (day !== 0 && day !== 6) {
                         const currentHour = current.getHours();
-                        // Only count if within 10 AM - 6 PM
-                        if (currentHour >= START_HOUR && currentHour < END_HOUR) {
-                            minutes++;
-                        }
+                        if (currentHour >= START_HOUR && currentHour < END_HOUR) minutes++;
                     }
                     current.setMinutes(current.getMinutes() + 1);
                 }
@@ -329,15 +360,9 @@
             }
 
             getResolutionMetrics() {
-                let totalMinutes = 0;
-                let count = 0;
-                
-                // Variables for Period Calculation (Separate from Resolution Calculation)
-                let minCreated = null;
-                let maxCreated = null;
-
+                let totalMinutes = 0; let count = 0; let minCreated = null; let maxCreated = null;
+                // Use filteredData for this so the avg updates based on selection
                 this.filteredData.forEach(item => {
-                    // 1. Calculate Period based on Created Date (for ALL items in filter)
                     const createdStr = item['Created Date'];
                     if (createdStr) {
                         const createdDate = new Date(createdStr);
@@ -346,37 +371,24 @@
                             if (!maxCreated || createdDate > maxCreated) maxCreated = createdDate;
                         }
                     }
-
-                    // 2. Calculate Resolution Time (Only for Resolved/Closed)
                     if (['Resolved', 'Closed'].includes(item.Status) && item['Created Date'] && item['Resolved Date']) {
                         const start = new Date(item['Created Date']);
                         const end = new Date(item['Resolved Date']);
-                        
                         if (!isNaN(start) && !isNaN(end) && end > start) {
                             totalMinutes += this.getWorkingMinutes(start, end);
                             count++;
                         }
                     }
                 });
-
-                // Formatting Time
                 const avgMinutes = count > 0 ? Math.floor(totalMinutes / count) : 0;
                 const hours = Math.floor(avgMinutes / 60);
                 const mins = avgMinutes % 60;
-                
-                // Formatting Date Period
                 const formatDate = (d) => d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '-';
-                
-                // Period based on ALL filtered data (Created Date), not just resolved ones
-                const periodString = minCreated && maxCreated ? `${formatDate(minCreated)} - ${formatDate(maxCreated)}` : 'No Data';
-
                 return {
                     avgTime: count > 0 ? `${hours}h ${mins}m` : 'N/A', 
-                    period: periodString,
-                    ticketCount: count
+                    period: minCreated && maxCreated ? `${formatDate(minCreated)} - ${formatDate(maxCreated)}` : 'No Data'
                 };
             }
-            // -------------------------------------------
 
             getEngineerStats() {
                 const stats = {};
@@ -388,14 +400,18 @@
                     stats[name].total++;
                     if (completedStatuses.includes(item.Status)) stats[name].completed++;
                 });
+                // Sorted by TOTAL (Highest Volume) first, then Rate
                 return Object.entries(stats).map(([name, data]) => ({
                     name, ...data, rate: data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0
-                })).sort((a, b) => b.rate - a.rate);
+                })).sort((a, b) => {
+                    if (b.total !== a.total) return b.total - a.total; // Sort by Volume High -> Low
+                    return b.rate - a.rate; // Tie-break by Rate
+                });
             }
 
             render() {
-                this.renderFilters();
-                this.renderStats();
+                this.renderStats(); // Render Tiles
+                this.renderFilters(); // Render Agent List (Reactive to tiles)
                 this.renderEngineerSection();
                 this.renderTable();
                 if (window.lucide) window.lucide.createIcons();
@@ -404,18 +420,29 @@
 
             renderFilters() {
                 const engContainer = document.getElementById('engineerFilters');
-                const statContainer = document.getElementById('statusFilters');
-                if(!engContainer || !statContainer) return;
-                const engineerList = this.metadata.engineers || [];
-                engContainer.innerHTML = engineerList.length === 0 ? '<span class="text-zinc-600 text-xs italic">No agents found</span>' : 
-                    engineerList.map(eng => `<button class="px-3 py-1 text-xs font-medium rounded-full border transition-all duration-200 ${this.filters.engineers.includes(eng) ? 'bg-executive-gold text-executive-950 border-executive-gold' : 'bg-executive-900 text-zinc-400 border-white/5 hover:border-white/20 hover:text-white'}" onclick="dashboard.toggleEngineerFilter('${eng}')">${eng}</button>`).join('');
-                statContainer.innerHTML = (this.metadata.statuses || []).map(status => `<button class="px-3 py-1 text-xs font-medium rounded-full border transition-all duration-200 ${this.filters.statuses.includes(status) ? 'bg-indigo-500 text-white border-indigo-500' : 'bg-executive-900 text-zinc-400 border-white/5 hover:border-white/20 hover:text-white'}" onclick="dashboard.toggleStatusFilter('${status}')">${status}</button>`).join('');
+                // We derive the agent list from data. Note: If you want the agent list to ONLY show
+                // agents available in the CURRENT status view, use this.filteredData. 
+                // If you want all agents always, use this.data.
+                // Based on "using tiles click the agent filter should work", it implies reactivity.
+                const activeEngineers = [...new Set(this.filteredData.map(item => this.getFieldValue(item, 'engineer')))].filter(n => n && n !== 'Unassigned').sort();
+                
+                if (activeEngineers.length === 0) {
+                    engContainer.innerHTML = '<span class="text-zinc-600 text-xs italic">No agents in current view</span>';
+                } else {
+                    engContainer.innerHTML = activeEngineers.map(eng => 
+                        `<button class="px-3 py-1 text-xs font-medium rounded-full border transition-all duration-200 ${this.filters.engineers.includes(eng) ? 'bg-executive-gold text-executive-950 border-executive-gold' : 'bg-executive-900 text-zinc-400 border-white/5 hover:border-white/20 hover:text-white'}" onclick="dashboard.toggleEngineerFilter('${eng}')">${eng}</button>`
+                    ).join('');
+                }
             }
 
             renderStats() {
-                const metrics = this.getMetrics();
-                const createCard = (label, value, iconName, colorText, bgSub) => `
-                    <div class="bg-executive-900 border border-white/5 rounded-xl p-6 shadow-lg hover:border-white/10 transition-all duration-300 group">
+                const metrics = this.getMetrics(); // Get counts based on context
+                
+                // Helper to check if tile is active
+                const isActive = (type) => this.filters.statusTile === type ? 'tile-active' : '';
+
+                const createCard = (type, label, value, iconName, colorText, bgSub) => `
+                    <div class="bg-executive-900 border border-white/5 rounded-xl p-6 shadow-lg hover:border-white/10 transition-all duration-300 group cursor-pointer ${isActive(type)}" onclick="dashboard.toggleStatusTile('${type}')">
                         <div class="flex justify-between items-start">
                             <div><p class="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-1">${label}</p><h3 class="text-3xl font-bold ${colorText}">${value}</h3></div>
                             <div class="p-3 rounded-lg bg-white/5 ${bgSub} group-hover:bg-white/10 transition-colors"><i data-lucide="${iconName}" class="w-6 h-6"></i></div>
@@ -423,14 +450,17 @@
                     </div>`;
 
                 let html = `
-                    ${createCard('Total Items', metrics.total, 'trending-up', 'text-white', 'text-zinc-400')}
-                    ${createCard(this.currentSource === 'tracker' ? 'Completed' : 'Resolved', metrics.completed, 'check-circle', 'text-emerald-400', 'text-emerald-400/80')}
-                    ${createCard(this.currentSource === 'tracker' ? 'In Progress' : 'Open/Pending', metrics.inProgress, 'clock', 'text-indigo-400', 'text-indigo-400/80')}
+                    <div class="bg-executive-900 border border-white/5 rounded-xl p-6 shadow-lg group cursor-default">
+                        <div class="flex justify-between items-start">
+                             <div><p class="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-1">Total Items</p><h3 class="text-3xl font-bold text-white">${metrics.total}</h3></div>
+                             <div class="p-3 rounded-lg bg-white/5 text-zinc-400"><i data-lucide="trending-up" class="w-6 h-6"></i></div>
+                        </div>
+                    </div>
+                    ${createCard('completed', this.currentSource === 'tracker' ? 'Completed' : 'Resolved', metrics.completed, 'check-circle', 'text-emerald-400', 'text-emerald-400/80')}
+                    ${createCard('inprogress', this.currentSource === 'tracker' ? 'In Progress' : 'Open/Pending', metrics.inProgress, 'clock', 'text-indigo-400', 'text-indigo-400/80')}
                 `;
 
-                // CONDITIONAL RENDERING FOR 4th CARD
                 if (this.currentSource === 'freshservice') {
-                    // Calculate Resolution Time
                     const resMetrics = this.getResolutionMetrics();
                     html += `
                         <div class="bg-executive-900 border border-violet-500/30 rounded-xl p-6 shadow-lg glow-card group relative overflow-hidden">
@@ -443,16 +473,13 @@
                                         <i data-lucide="calendar" class="w-3 h-3"></i> ${resMetrics.period}
                                     </div>
                                 </div>
-                                <div class="p-3 rounded-lg bg-violet-500/20 text-violet-300 group-hover:bg-violet-500/30 transition-colors">
-                                    <i data-lucide="zap" class="w-6 h-6"></i>
-                                </div>
+                                <div class="p-3 rounded-lg bg-violet-500/20 text-violet-300"><i data-lucide="zap" class="w-6 h-6"></i></div>
                             </div>
                         </div>
                     `;
                 } else {
-                    html += createCard('Blocked', metrics.blocked, 'alert-circle', 'text-red-400', 'text-red-400/80');
+                    html += createCard('blocked', 'Blocked', metrics.blocked, 'alert-circle', 'text-red-400', 'text-red-400/80');
                 }
-
                 document.getElementById('statsGrid').innerHTML = html;
             }
 
@@ -481,8 +508,8 @@
                 if (this.chartInstance) this.chartInstance.destroy();
                 this.chartInstance = new Chart(canvas, {
                     type: 'bar',
-                    data: { labels: topEng.map(e => e.name), datasets: [{ label: 'Rate %', data: topEng.map(e => e.rate), backgroundColor: colors, borderRadius: 4, barThickness: 12 }] },
-                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#18181b', bodyColor: '#fff' } }, scales: { x: { display: false, max: 100 }, y: { ticks: { color: '#a1a1aa' }, grid: { display: false } } } }
+                    data: { labels: topEng.map(e => e.name), datasets: [{ label: 'Total Volume', data: topEng.map(e => e.total), backgroundColor: colors, borderRadius: 4, barThickness: 12 }] },
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#18181b', bodyColor: '#fff' } }, scales: { x: { display: false }, y: { ticks: { color: '#a1a1aa' }, grid: { display: false } } } }
                 });
             }
 
