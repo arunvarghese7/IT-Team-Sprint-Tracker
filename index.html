@@ -47,15 +47,11 @@
       /* Active Tile Styling */
       .tile-active {
         border-color: #FFC300 !important;
-        background: rgba(255, 195, 0, 0.05) !important;
+        background: rgba(255, 195, 0, 0.1) !important;
+        box-shadow: 0 0 15px rgba(255, 195, 0, 0.1);
         transform: translateY(-2px);
       }
       
-      @keyframes pulse-violet {
-        0%, 100% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3); }
-        50% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.25); border-color: rgba(139, 92, 246, 0.6); }
-      }
-      .glow-card { animation: pulse-violet 3s infinite; }
       .cursor-pointer { cursor: pointer; }
     </style>
 </head>
@@ -89,7 +85,7 @@
             </div>
         </div>
 
-        <div id="statsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div id="statsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -150,7 +146,7 @@
 
     <footer class="border-t border-white/5 mt-auto py-8">
         <div class="max-w-7xl mx-auto px-6 text-center text-zinc-600 text-sm">
-            <p>&copy; 2024 IT Operations Dashboard. Internal Use Only.</p>
+            <p>&copy; 2026 IT Operations Dashboard. Internal Use Only.</p>
         </div>
     </footer>
 
@@ -170,7 +166,7 @@
             { 'Task': 'Database Migration', 'Sub-Task': 'Data Transfer', 'Engineer': 'David Lee', 'Status': 'Blocked', 'Start Date': '2024-10-01', 'Closure Date': '', 'Blocker/Dependency': 'Waiting for approval' },
             { 'Task': 'Frontend Redesign', 'Sub-Task': 'Homepage', 'Engineer': 'Emma Wilson', 'Status': 'Completed', 'Start Date': '2024-11-01', 'Closure Date': '2024-11-10', 'Blocker/Dependency': '' },
             { 'Task': 'Frontend Redesign', 'Sub-Task': 'Dashboard', 'Engineer': 'Frank Brown', 'Status': 'In Progress', 'Start Date': '2024-11-05', 'Closure Date': '', 'Blocker/Dependency': '' },
-            { 'Task': 'Backend Ops', 'Sub-Task': 'Scaling', 'Engineer': 'Bob Smith', 'Status': 'Completed', 'Start Date': '2024-11-05', 'Closure Date': '', 'Blocker/Dependency': '' }
+            { 'Task': 'Backend Ops', 'Sub-Task': 'Scaling', 'Engineer': 'Bob Smith', 'Status': 'Not Started', 'Start Date': '2024-11-05', 'Closure Date': '', 'Blocker/Dependency': '' }
         ];
         
         const DEMO_DATA_FRESHSERVICE = [
@@ -187,7 +183,6 @@
                 this.data = [];
                 this.filteredData = [];
                 this.metadata = { engineers: [], statuses: [] };
-                // Removed 'statuses' from filters object, replaced with 'statusTile'
                 this.filters = { engineers: [], statusTile: null, dateRange: { start: '', end: '' } };
                 this.currentSource = 'tracker'; 
                 this.chartInstance = null;
@@ -237,8 +232,11 @@
                         if (!result.success) throw new Error(result.message);
                         this.data = result.data;
                     }
+                    
                     const distinctEngineers = [...new Set(this.data.map(item => this.getFieldValue(item, 'engineer')))].filter(n => n && n !== 'Unassigned').sort();
-                    this.metadata = { engineers: distinctEngineers };
+                    const distinctStatuses = [...new Set(this.data.map(item => item.Status))].filter(Boolean).sort();
+                    
+                    this.metadata = { engineers: distinctEngineers, statuses: distinctStatuses };
                     
                     this.applyFilters();
                     this.render();
@@ -248,11 +246,11 @@
             }
 
             // === TILE INTERACTION LOGIC ===
-            toggleStatusTile(tileType) {
-                if (this.filters.statusTile === tileType) {
-                    this.filters.statusTile = null; // Deselect if already active
+            toggleStatusTile(statusName) {
+                if (this.filters.statusTile === statusName) {
+                    this.filters.statusTile = null; // Deselect
                 } else {
-                    this.filters.statusTile = tileType; // Set active
+                    this.filters.statusTile = statusName; // Select
                 }
                 this.applyFilters();
                 this.render();
@@ -261,23 +259,9 @@
             applyFilters() {
                 let filtered = [...this.data];
 
-                // 1. Status Tile Filter Logic
+                // 1. Status Tile Filter
                 if (this.filters.statusTile) {
-                    const tile = this.filters.statusTile;
-                    if (tile === 'completed') {
-                         const match = this.currentSource === 'tracker' ? ['Completed'] : ['Resolved', 'Closed'];
-                         filtered = filtered.filter(d => match.includes(d.Status));
-                    } else if (tile === 'inprogress') {
-                         const match = this.currentSource === 'tracker' ? ['In Progress', 'Not Started'] : ['Open', 'Pending', 'On Hold'];
-                         filtered = filtered.filter(d => match.includes(d.Status));
-                    } else if (tile === 'blocked') {
-                        if (this.currentSource === 'tracker') {
-                             filtered = filtered.filter(d => d.Status === 'Blocked');
-                        } else {
-                             // High Priority Open for Freshservice
-                             filtered = filtered.filter(d => d.Status === 'Open' && d.Priority === 'High');
-                        }
-                    }
+                    filtered = filtered.filter(d => d.Status === this.filters.statusTile);
                 }
 
                 // 2. Engineer Filter
@@ -312,13 +296,11 @@
             }
 
             // --- HELPER METRICS ---
-            getMetrics() {
-                // Calculate metrics based on FULL data (or date-filtered data), 
-                // but NOT based on the current tile selection (otherwise tiles would zero out)
-                // We use a temporary filtered set that respects Date + Engineer but ignores Status Tile
+            // Calculates counts of EVERY status present in the context (ignoring the tile selection itself)
+            getStatusCounts() {
+                // Base context: Date Range + Engineer selection
                 let contextData = this.data;
-                
-                // We apply date and engineer filters to the metric counts so they reflect the "current view context"
+
                 if (this.filters.dateRange.start && this.filters.dateRange.end) {
                      const start = new Date(this.filters.dateRange.start);
                      const end = new Date(this.filters.dateRange.end);
@@ -331,63 +313,18 @@
                      contextData = contextData.filter(item => this.filters.engineers.includes(this.getFieldValue(item, 'engineer')));
                 }
 
-                const completedStatuses = this.currentSource === 'freshservice' ? ['Resolved', 'Closed'] : ['Completed'];
-                const inProgressStatuses = this.currentSource === 'freshservice' ? ['Open', 'Pending', 'On Hold'] : ['In Progress', 'Not Started'];
-                const highPriorityOpenStatuses = this.currentSource === 'freshservice' ? contextData.filter(d => d.Status === 'Open' && d.Priority === 'High') : [];
+                const counts = { total: contextData.length, statuses: {} };
                 
-                return {
-                    total: contextData.length,
-                    completed: contextData.filter(d => completedStatuses.includes(d.Status)).length,
-                    inProgress: contextData.filter(d => inProgressStatuses.includes(d.Status)).length,
-                    blocked: this.currentSource === 'tracker' ? contextData.filter(d => d.Status === 'Blocked').length : highPriorityOpenStatuses.length
-                };
-            }
+                // Initialize counts for known statuses in metadata to 0, or just build dynamically
+                this.metadata.statuses.forEach(s => counts.statuses[s] = 0);
 
-            getWorkingMinutes(startDate, endDate) {
-                let minutes = 0;
-                let current = new Date(startDate);
-                const end = new Date(endDate);
-                const START_HOUR = 10; const END_HOUR = 18;
-                while (current < end) {
-                    const day = current.getDay();
-                    if (day !== 0 && day !== 6) {
-                        const currentHour = current.getHours();
-                        if (currentHour >= START_HOUR && currentHour < END_HOUR) minutes++;
-                    }
-                    current.setMinutes(current.getMinutes() + 1);
-                }
-                return minutes;
-            }
-
-            getResolutionMetrics() {
-                let totalMinutes = 0; let count = 0; let minCreated = null; let maxCreated = null;
-                // Use filteredData for this so the avg updates based on selection
-                this.filteredData.forEach(item => {
-                    const createdStr = item['Created Date'];
-                    if (createdStr) {
-                        const createdDate = new Date(createdStr);
-                        if (!isNaN(createdDate)) {
-                            if (!minCreated || createdDate < minCreated) minCreated = createdDate;
-                            if (!maxCreated || createdDate > maxCreated) maxCreated = createdDate;
-                        }
-                    }
-                    if (['Resolved', 'Closed'].includes(item.Status) && item['Created Date'] && item['Resolved Date']) {
-                        const start = new Date(item['Created Date']);
-                        const end = new Date(item['Resolved Date']);
-                        if (!isNaN(start) && !isNaN(end) && end > start) {
-                            totalMinutes += this.getWorkingMinutes(start, end);
-                            count++;
-                        }
+                contextData.forEach(item => {
+                    if (item.Status) {
+                        counts.statuses[item.Status] = (counts.statuses[item.Status] || 0) + 1;
                     }
                 });
-                const avgMinutes = count > 0 ? Math.floor(totalMinutes / count) : 0;
-                const hours = Math.floor(avgMinutes / 60);
-                const mins = avgMinutes % 60;
-                const formatDate = (d) => d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '-';
-                return {
-                    avgTime: count > 0 ? `${hours}h ${mins}m` : 'N/A', 
-                    period: minCreated && maxCreated ? `${formatDate(minCreated)} - ${formatDate(maxCreated)}` : 'No Data'
-                };
+                
+                return counts;
             }
 
             getEngineerStats() {
@@ -420,10 +357,6 @@
 
             renderFilters() {
                 const engContainer = document.getElementById('engineerFilters');
-                // We derive the agent list from data. Note: If you want the agent list to ONLY show
-                // agents available in the CURRENT status view, use this.filteredData. 
-                // If you want all agents always, use this.data.
-                // Based on "using tiles click the agent filter should work", it implies reactivity.
                 const activeEngineers = [...new Set(this.filteredData.map(item => this.getFieldValue(item, 'engineer')))].filter(n => n && n !== 'Unassigned').sort();
                 
                 if (activeEngineers.length === 0) {
@@ -435,51 +368,56 @@
                 }
             }
 
+            // Styling helper for dynamic status cards
+            getStatusStyle(status) {
+                const s = status.toLowerCase();
+                if (['completed', 'resolved', 'closed'].some(x => s.includes(x))) return { text: 'text-emerald-400', bg: 'bg-emerald-500/10', icon: 'check-circle' };
+                if (['in progress', 'open'].some(x => s.includes(x))) return { text: 'text-indigo-400', bg: 'bg-indigo-500/10', icon: 'loader' };
+                if (['pending', 'on hold', 'not started'].some(x => s.includes(x))) return { text: 'text-amber-400', bg: 'bg-amber-500/10', icon: 'clock' };
+                if (['blocked', 'high'].some(x => s.includes(x))) return { text: 'text-red-400', bg: 'bg-red-500/10', icon: 'alert-circle' };
+                return { text: 'text-zinc-300', bg: 'bg-zinc-500/10', icon: 'circle' };
+            }
+
             renderStats() {
-                const metrics = this.getMetrics(); // Get counts based on context
+                const metrics = this.getStatusCounts(); 
                 
                 // Helper to check if tile is active
-                const isActive = (type) => this.filters.statusTile === type ? 'tile-active' : '';
+                const isActive = (name) => this.filters.statusTile === name ? 'tile-active' : '';
 
-                const createCard = (type, label, value, iconName, colorText, bgSub) => `
-                    <div class="bg-executive-900 border border-white/5 rounded-xl p-6 shadow-lg hover:border-white/10 transition-all duration-300 group cursor-pointer ${isActive(type)}" onclick="dashboard.toggleStatusTile('${type}')">
-                        <div class="flex justify-between items-start">
-                            <div><p class="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-1">${label}</p><h3 class="text-3xl font-bold ${colorText}">${value}</h3></div>
-                            <div class="p-3 rounded-lg bg-white/5 ${bgSub} group-hover:bg-white/10 transition-colors"><i data-lucide="${iconName}" class="w-6 h-6"></i></div>
-                        </div>
-                    </div>`;
-
+                // 1. Total Card (Always First)
                 let html = `
-                    <div class="bg-executive-900 border border-white/5 rounded-xl p-6 shadow-lg group cursor-default">
+                    <div class="bg-executive-900 border border-white/5 rounded-xl p-4 shadow-lg group cursor-default">
                         <div class="flex justify-between items-start">
-                             <div><p class="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-1">Total Items</p><h3 class="text-3xl font-bold text-white">${metrics.total}</h3></div>
-                             <div class="p-3 rounded-lg bg-white/5 text-zinc-400"><i data-lucide="trending-up" class="w-6 h-6"></i></div>
+                             <div><p class="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider mb-1">Total</p><h3 class="text-2xl font-bold text-white">${metrics.total}</h3></div>
+                             <div class="p-2 rounded-lg bg-white/5 text-zinc-400"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
                         </div>
                     </div>
-                    ${createCard('completed', this.currentSource === 'tracker' ? 'Completed' : 'Resolved', metrics.completed, 'check-circle', 'text-emerald-400', 'text-emerald-400/80')}
-                    ${createCard('inprogress', this.currentSource === 'tracker' ? 'In Progress' : 'Open/Pending', metrics.inProgress, 'clock', 'text-indigo-400', 'text-indigo-400/80')}
                 `;
 
-                if (this.currentSource === 'freshservice') {
-                    const resMetrics = this.getResolutionMetrics();
+                // 2. Dynamic Status Cards
+                // We use metadata.statuses to ensure we generate tiles for everything available in the dataset
+                // even if count is 0 in current view (optional preference, here we show what's in context)
+                const statusesToShow = Object.keys(metrics.statuses).sort();
+
+                statusesToShow.forEach(status => {
+                    const count = metrics.statuses[status];
+                    const style = this.getStatusStyle(status);
+                    
                     html += `
-                        <div class="bg-executive-900 border border-violet-500/30 rounded-xl p-6 shadow-lg glow-card group relative overflow-hidden">
-                            <div class="absolute top-0 right-0 p-8 opacity-20"><div class="w-20 h-20 rounded-full bg-violet-600 blur-2xl"></div></div>
-                            <div class="flex justify-between items-start relative z-10">
+                        <div class="bg-executive-900 border border-white/5 rounded-xl p-4 shadow-lg hover:border-white/20 transition-all duration-200 group cursor-pointer ${isActive(status)}" onclick="dashboard.toggleStatusTile('${status}')">
+                            <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="text-violet-300 text-xs font-semibold uppercase tracking-wider mb-1">Avg Resolution Time</p>
-                                    <h3 class="text-3xl font-bold text-violet-400">${resMetrics.avgTime}</h3>
-                                    <div class="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded bg-violet-500/10 border border-violet-500/20 text-[10px] text-violet-300">
-                                        <i data-lucide="calendar" class="w-3 h-3"></i> ${resMetrics.period}
-                                    </div>
+                                    <p class="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider mb-1 truncate pr-2" title="${status}">${status}</p>
+                                    <h3 class="text-2xl font-bold ${style.text}">${count}</h3>
                                 </div>
-                                <div class="p-3 rounded-lg bg-violet-500/20 text-violet-300"><i data-lucide="zap" class="w-6 h-6"></i></div>
+                                <div class="p-2 rounded-lg ${style.bg} ${style.text} group-hover:bg-opacity-20 transition-colors">
+                                    <i data-lucide="${style.icon}" class="w-5 h-5"></i>
+                                </div>
                             </div>
                         </div>
                     `;
-                } else {
-                    html += createCard('blocked', 'Blocked', metrics.blocked, 'alert-circle', 'text-red-400', 'text-red-400/80');
-                }
+                });
+
                 document.getElementById('statsGrid').innerHTML = html;
             }
 
@@ -536,12 +474,15 @@
                     return;
                 }
                 const getBadge = (s) => {
-                    s = s.toLowerCase();
-                    let c = 'bg-zinc-800 text-zinc-300';
-                    if (s.match(/completed|resolved|closed/)) c = 'bg-emerald-900/30 text-emerald-400';
-                    else if (s.match(/open|progress|pending/)) c = 'bg-indigo-900/30 text-indigo-400';
-                    else if (s.match(/blocked|high/)) c = 'bg-red-900/30 text-red-400';
-                    return `<span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border border-transparent ${c}">${s}</span>`;
+                    const style = this.getStatusStyle(s);
+                    // Extract color classes from the style object for the badge
+                    let badgeClass = 'bg-zinc-800 text-zinc-300';
+                    if (style.text.includes('emerald')) badgeClass = 'bg-emerald-900/30 text-emerald-400';
+                    else if (style.text.includes('indigo')) badgeClass = 'bg-indigo-900/30 text-indigo-400';
+                    else if (style.text.includes('amber')) badgeClass = 'bg-amber-900/30 text-amber-400';
+                    else if (style.text.includes('red')) badgeClass = 'bg-red-900/30 text-red-400';
+                    
+                    return `<span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border border-transparent ${badgeClass}">${s}</span>`;
                 };
                 let th, tr;
                 if (this.currentSource === 'freshservice') {
