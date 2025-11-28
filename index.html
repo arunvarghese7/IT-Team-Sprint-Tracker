@@ -3,19 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IT Team Dashboard</title>
+    <title>Team Tracker Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
-        /* MOENGAGE-INSPIRED STYLES */
+        /* DATADOG/WIZ DARK THEME STYLES */
 
         :root {
-            --primary-color: #5e72e4; /* Vibrant Blue/Purple */
-            --dark-background: #0f172a; /* Deep Slate Blue */
-            --light-surface: #ffffff;
+            --primary-color: #5e72e4; /* Vibrant Blue/Purple for main actions */
+            --accent-green: #10b981; /* Strong Green for Completion/Success */
+            --dark-background: #0d1117; /* Deep Charcoal/Black background */
+            --mid-background: #161b22; /* Slightly lighter for sections */
+            --light-surface: #21262d; /* Card background */
             --text-light: #f1f5f9;
-            --text-muted: #94a3b8;
-            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            --text-muted: #8b949e;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -24,17 +26,16 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
             background: var(--dark-background);
             color: var(--text-light);
-            /* Stylized Background Pattern (MoEngage-like geometric/grid effect) */
-            background-image: radial-gradient(var(--text-muted) 1px, transparent 0), radial-gradient(var(--text-muted) 1px, transparent 0);
+            /* Subtle geometric/grid pattern for depth */
+            background-image: radial-gradient(var(--mid-background) 1px, transparent 0), radial-gradient(var(--mid-background) 1px, transparent 0);
             background-size: 40px 40px;
             background-position: 0 0, 20px 20px;
-            background-blend-mode: multiply;
         }
 
-        /* Navigation - Bright on Dark */
+        /* Navigation - Floating Bar */
         .nav-bar {
-            background: rgba(255, 255, 255, 0.1); /* Slightly transparent background */
-            backdrop-filter: blur(10px);
+            background: rgba(13, 17, 23, 0.9); /* Deep transparency */
+            backdrop-filter: blur(15px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             position: sticky;
             top: 0;
@@ -63,12 +64,17 @@
             align-items: center;
         }
 
-        /* Hero Section - Elevated */
+        /* Hero Section - High Contrast */
         .hero-section {
             background: var(--dark-background);
-            padding: 4rem 2rem;
+            padding: 4rem 2rem 2rem;
             text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: none;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
         }
 
         .hero-title {
@@ -77,7 +83,8 @@
             letter-spacing: -1.5px;
             margin-bottom: 1rem;
             line-height: 1.1;
-            background: linear-gradient(90deg, #c3cbe3 0%, #ffffff 100%);
+            /* Text gradient for tech look */
+            background: linear-gradient(90deg, #b0c7ff 0%, #ffffff 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -101,7 +108,7 @@
             padding: 2rem 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-
+        
         .filter-bar {
             display: flex;
             gap: 1rem;
@@ -114,14 +121,13 @@
             padding: 0.75rem 1.25rem;
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 0.5rem;
-            background: rgba(255, 255, 255, 0.05); /* Slightly transparent dark input */
+            background: var(--light-surface);
             color: var(--text-light);
             font-size: 0.9375rem;
             transition: all 0.2s;
             font-family: inherit;
             cursor: pointer;
         }
-        /* Style date picker text color */
         .filter-input::-webkit-calendar-picker-indicator {
             filter: invert(1);
         }
@@ -140,7 +146,7 @@
         .filter-chip {
             display: inline-block;
             padding: 0.6rem 1.2rem;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--light-surface);
             color: var(--text-light);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 50px;
@@ -153,18 +159,18 @@
 
         .filter-chip:hover {
             border-color: var(--primary-color);
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--mid-background);
         }
 
         .filter-chip.active {
             background: var(--primary-color);
-            color: var(--light-surface);
+            color: white;
             border-color: var(--primary-color);
         }
 
         .date-display {
             padding: 0.75rem 1.25rem;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--light-surface);
             border-radius: 0.5rem;
             font-size: 0.875rem;
             font-weight: 500;
@@ -173,7 +179,7 @@
 
         .clear-btn {
             padding: 0.75rem 1.5rem;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--light-surface);
             color: var(--text-light);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 0.5rem;
@@ -185,15 +191,40 @@
         }
 
         .clear-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: var(--mid-background);
             border-color: var(--primary-color);
         }
         
-        /* Specific button for Export */
         #exportBtn {
-            background: var(--primary-color) !important;
+            background: var(--accent-green) !important;
             color: white !important;
-            border-color: var(--primary-color) !important;
+            border-color: var(--accent-green) !important;
+            margin-left: 0.5rem;
+        }
+        
+        /* Data Source Toggle Switch Style */
+        .toggle-switch-container {
+            display: flex;
+            background: var(--light-surface);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 0.25rem;
+            margin-top: 1.5rem; /* Separated from hero text */
+            margin-left: auto;
+            margin-right: auto;
+            width: fit-content;
+        }
+        .toggle-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.4rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            border: none;
+            background-color: transparent; /* Default */
+            color: var(--text-light);
         }
 
         /* Stats Section */
@@ -212,16 +243,16 @@
             text-align: center;
             padding: 2rem;
             background: var(--light-surface);
-            color: var(--dark-background); /* Dark text on light card */
+            color: var(--text-light);
             border-radius: 1rem;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             box-shadow: var(--card-shadow);
             transition: all 0.3s;
         }
 
         .stat-card:hover {
             transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
         }
 
         .stat-number {
@@ -233,7 +264,7 @@
 
         .stat-label {
             font-size: 1rem;
-            color: #64748b; /* Muted dark color */
+            color: var(--text-muted);
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -251,27 +282,15 @@
             letter-spacing: -0.5px;
         }
 
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-
         .card {
             background: var(--light-surface);
-            color: var(--dark-background);
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            color: var(--text-light);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 1rem;
             padding: 1.5rem;
             box-shadow: var(--card-shadow);
             transition: all 0.3s;
             cursor: pointer;
-        }
-
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
         }
 
         .card-title {
@@ -282,32 +301,24 @@
 
         .card-subtitle {
             font-size: 0.9375rem;
-            color: #64748b;
+            color: var(--text-muted);
             margin-bottom: 1.25rem;
         }
 
         .progress-bar {
-            width: 100%;
+            background: var(--mid-background);
             height: 8px;
-            background: #e2e8f0;
             border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 0.75rem;
         }
 
         .progress-fill {
-            height: 100%;
             background: linear-gradient(90deg, var(--primary-color) 0%, #7f8cfc 100%);
-            transition: width 0.5s ease;
             border-radius: 4px;
         }
 
         .progress-label {
+            color: var(--text-muted);
             font-size: 0.875rem;
-            color: #64748b;
-            display: flex;
-            justify-content: space-between;
-            font-weight: 500;
         }
 
         /* Badge Colors */
@@ -321,143 +332,93 @@
             letter-spacing: 0.5px;
             margin-bottom: 0;
         }
-
-        .badge-completed { background: #10b981; color: white; } /* Emerald Green */
-        .badge-in-progress { background: var(--primary-color); color: white; }
+        
+        /* Status Badges */
+        .badge-completed, .badge-resolved, .badge-closed { background: var(--accent-green); color: white; }
+        .badge-in-progress, .badge-open, .badge-pending { background: var(--primary-color); color: white; }
         .badge-blocked { background: #ef4444; color: white; } /* Strong Red */
-        .badge-not-started { background: #94a3b8; color: white; } /* Muted Gray */
+        .badge-not-started, .badge-on-hold { background: #56606a; color: white; } /* Muted Gray */
+
 
         /* Table Section */
-        .table-section {
-            padding: 3rem 0;
-        }
-
         .table-wrapper {
             background: var(--light-surface);
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 1rem;
             overflow: hidden;
             box-shadow: var(--card-shadow);
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            color: var(--dark-background);
-        }
-
         th {
-            background: #f1f5f9;
+            background: var(--mid-background);
             padding: 1.25rem;
-            text-align: left;
             font-weight: 700;
             font-size: 0.875rem;
-            color: #475569;
-            border-bottom: 1px solid #e2e8f0;
+            color: var(--text-muted);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: left;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         td {
             padding: 1.25rem;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-light);
             font-size: 0.9375rem;
         }
 
         tr:hover {
-            background: #f8fafc;
+            background: rgba(255, 255, 255, 0.05);
         }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 3rem 2rem;
-            color: #64748b;
-        }
-
-        .empty-state-title {
-            color: var(--dark-background);
-        }
-
-        /* Modal */
-        .modal-overlay {
-            /* Keep original styles for dark overlay/blur */
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
+        
+        /* Modal for Date Range */
         .modal {
-            background: var(--light-surface);
-            color: var(--dark-background);
-            border-radius: 1.5rem;
-            padding: 2rem;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            background: var(--mid-background);
+            color: var(--text-light);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-title {
+            color: var(--text-light);
         }
         
         .modal-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
-            margin-bottom: 1rem;
-            font-size: 0.9375rem;
-            font-family: inherit;
-            color: var(--dark-background);
-            background-color: #f8fafc;
+            color: var(--text-light);
+            background-color: var(--dark-background);
+            border-color: rgba(255, 255, 255, 0.1);
         }
-
+        
         .btn-primary {
             background: var(--primary-color);
-            color: white;
-            border: none;
-            /* ... other styles */
         }
-
         .btn-primary:hover {
-            background: #4c5ee5; /* Slightly darker primary color */
+            background: #4c5ee5;
         }
 
         .btn-secondary {
-            background: #e2e8f0;
-            color: var(--dark-background);
-            border: none;
-            /* ... other styles */
+            background: var(--light-surface);
+            color: var(--text-light);
         }
 
         .btn-secondary:hover {
-            background: #cbd5e1;
+            background: var(--mid-background);
         }
-        
-        /* Spinners - ensure visibility on dark background */
-        .spinner {
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-top-color: var(--primary-color);
+
+        /* Empty state icon color for visibility */
+        .empty-state-icon {
+            color: var(--primary-color);
         }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div class="nav-bar">
         <div class="nav-content">
-            <div class="logo">🚀 IT Team Tracker</div>
+            <div class="logo">📊 Team Tracker</div>
             <div class="nav-actions">
-                <button id="refreshBtn" style="padding: 0.5rem 1rem; background: rgba(255, 255, 255, 0.1); color: var(--text-light); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.5rem; cursor: pointer; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.background='rgba(255, 255, 255, 0.2)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'">🔄 Refresh</button>
+                <button id="refreshBtn" class="toggle-btn" style="background: var(--light-surface); color: var(--text-light);" onmouseover="this.style.background='#161b22'" onmouseout="this.style.background='#21262d'">🔄 Refresh</button>
                 <div style="font-size: 0.875rem; color: var(--text-muted);">Last updated: <span id="lastUpdate">now</span></div>
             </div>
         </div>
@@ -465,8 +426,13 @@
 
     <div class="hero-section">
         <div class="hero-content">
-            <h1 class="hero-title">Engineering Progress Dashboard</h1>
-            <p class="hero-subtitle">Real-time insights into team's progress and productivity using modern metrics</p>
+            <h1 class="hero-title">Team Performance Dashboard</h1>
+            <p class="hero-subtitle">Real-time insights into your team's progress and productivity</p>
+            
+            <div class="toggle-switch-container">
+                <button id="trackerToggle" class="toggle-btn" onclick="dashboard.switchDataSource('tracker')">📋 Team Tracker</button>
+                <button id="freshserviceToggle" class="toggle-btn" onclick="dashboard.switchDataSource('freshservice')">🎫 Freshservice</button>
+            </div>
         </div>
     </div>
 
@@ -477,11 +443,11 @@
                 <input type="date" id="endDate" class="filter-input" placeholder="End Date">
                 <div class="date-display" id="dateDisplay">Select date range</div>
                 <button class="clear-btn" onclick="dashboard.clearAllFilters()">Clear Filters</button>
-                <button class="clear-btn" id="exportBtn" style="margin-left: 0.5rem;">📥 Export</button>
+                <button class="clear-btn" id="exportBtn">📥 Export</button>
             </div>
 
             <div style="margin-bottom: 1.5rem;">
-                <div style="font-size: 0.875rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Engineers</div>
+                <div style="font-size: 0.875rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;" id="engineerFilterLabel">Engineers</div>
                 <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;" id="engineerFilters"></div>
             </div>
 
@@ -496,12 +462,12 @@
         </div>
 
         <div class="cards-section">
-            <h2 class="section-title">Engineer Performance</h2>
+            <h2 class="section-title" id="engineerCardsTitle">Engineer Performance</h2>
             <div class="cards-grid" id="engineerCards"></div>
         </div>
 
         <div class="table-section">
-            <h2 class="section-title">Team Activity</h2>
+            <h2 class="section-title" id="tableTitle">Team Activity</h2>
             <div class="table-wrapper">
                 <div id="tableContent"></div>
             </div>
@@ -521,16 +487,15 @@
     </div>
 
     <script>
-        // (JavaScript remains unchanged for functionality)
         const CONFIG = {
-            APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbz1jIz73VKcat6GmkqovmqtXHyago4bimxxeaVWekniYU_lowq-e4t9FV1r2PSUqziIKw/exec',
-            API_KEY: '98415623-a1d1-4045-84d3-c3e67fa687af',
+            APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbz1jIz73VKcat6GmkqovmqtXHyago4bimxxeaVWekniYU_lowq-e4t9FV1r2PSUqziIKw/exec', // Replace with your actual URL
+            API_KEY: '98415623-a1d1-4045-84d3-c3e67fa687af',        // Replace with your actual Key
             REFRESH_INTERVAL: 300000,
-            ENABLE_DEMO: false, // Switched to true for demonstration
+            ENABLE_DEMO: false, // Set to false to use live data
             ORG_NAME: 'Moengage'
         };
 
-        const DEMO_DATA = [
+        const DEMO_DATA_TRACKER = [
             { 'Task': 'API Integration', 'Sub-Task': 'User Auth', 'Engineer': 'Alice Johnson', 'Status': 'Completed', 'Start Date': '2024-10-01', 'Closure Date': '2024-10-15', 'Blocker/Dependency': '' },
             { 'Task': 'API Integration', 'Sub-Task': 'Payment', 'Engineer': 'Bob Smith', 'Status': 'In Progress', 'Start Date': '2024-10-10', 'Closure Date': '', 'Blocker/Dependency': '' },
             { 'Task': 'Database Migration', 'Sub-Task': 'Schema', 'Engineer': 'Carol Davis', 'Status': 'Completed', 'Start Date': '2024-09-15', 'Closure Date': '2024-09-30', 'Blocker/Dependency': '' },
@@ -538,43 +503,89 @@
             { 'Task': 'Frontend Redesign', 'Sub-Task': 'Homepage', 'Engineer': 'Emma Wilson', 'Status': 'Completed', 'Start Date': '2024-11-01', 'Closure Date': '2024-11-10', 'Blocker/Dependency': '' },
             { 'Task': 'Frontend Redesign', 'Sub-Task': 'Dashboard', 'Engineer': 'Frank Brown', 'Status': 'In Progress', 'Start Date': '2024-11-05', 'Closure Date': '', 'Blocker/Dependency': '' },
         ];
+        
+        const DEMO_DATA_FRESHSERVICE = [
+            { 'ID': 1001, 'Type': 'Incident', 'Status': 'Resolved', 'Priority': 'High', 'Subject': 'Network outage in building A', 'Agent Name': 'Alice Johnson', 'Created Date': '2024-11-20', 'Resolved Date': '2024-11-20', 'Closed Date': '2024-11-21' },
+            { 'ID': 1002, 'Type': 'Service Request', 'Status': 'Open', 'Priority': 'Low', 'Subject': 'Request new laptop for Jane', 'Agent Name': 'Carol Davis', 'Created Date': '2024-11-27', 'Resolved Date': '', 'Closed Date': '' },
+            { 'ID': 1003, 'Type': 'Incident', 'Status': 'Pending', 'Priority': 'Medium', 'Subject': 'Printer in HR broken', 'Agent Name': 'Bob Smith', 'Created Date': '2024-11-28', 'Resolved Date': '', 'Closed Date': '' },
+            { 'ID': 1004, 'Type': 'Service Request', 'Status': 'Closed', 'Priority': 'High', 'Subject': 'Software installation request', 'Agent Name': 'Alice Johnson', 'Created Date': '2024-11-15', 'Resolved Date': '2024-11-16', 'Closed Date': '2024-11-16' },
+            { 'ID': 1005, 'Type': 'Problem', 'Status': 'On Hold', 'Priority': 'Medium', 'Subject': 'Server license issue', 'Agent Name': 'David Lee', 'Created Date': '2024-10-10', 'Resolved Date': '', 'Closed Date': '' },
+            { 'ID': 1006, 'Type': 'Incident', 'Status': 'Open', 'Priority': 'High', 'Subject': 'Critical website error', 'Agent Name': 'David Lee', 'Created Date': '2024-11-28', 'Resolved Date': '', 'Closed Date': '' },
+        ];
 
         class Dashboard {
             constructor() {
                 this.data = [];
                 this.filteredData = [];
-                this.metadata = { engineers: [], tasks: [], statuses: [] };
+                this.metadata = { engineers: [], statuses: [] };
                 this.filters = {
                     engineers: [],
                     statuses: [],
                     dateRange: { start: '', end: '' }
                 };
+                this.currentSource = 'tracker'; // Default to 'tracker'
                 this.init();
             }
 
             async init() {
-                await this.loadData();
+                // Initialize the UI and load default data source
+                await this.switchDataSource(this.currentSource, false); 
                 this.render();
                 setInterval(() => this.loadData(), CONFIG.REFRESH_INTERVAL);
+            }
+
+            // Logic to switch data source and update UI (FIXED)
+            async switchDataSource(source, reload = true) {
+                this.currentSource = source;
+                
+                // Use explicit colors to fix CSS variable reading in inline JS
+                const primaryColor = '#5e72e4';
+                const lightSurface = '#21262d'; 
+                const textColor = '#f1f5f9';
+
+                const trackerBtn = document.getElementById('trackerToggle');
+                const fsBtn = document.getElementById('freshserviceToggle');
+
+                trackerBtn.style.backgroundColor = source === 'tracker' ? primaryColor : 'transparent';
+                trackerBtn.style.color = source === 'tracker' ? 'white' : textColor;
+                fsBtn.style.backgroundColor = source === 'freshservice' ? primaryColor : 'transparent';
+                fsBtn.style.color = source === 'freshservice' ? 'white' : textColor;
+                
+                // Update Titles (FIXED)
+                document.getElementById('engineerCardsTitle').textContent = source === 'tracker' ? 'Engineer Performance' : 'Agent Performance';
+                document.getElementById('tableTitle').textContent = source === 'tracker' ? 'Engineering Task Activity' : 'Helpdesk Ticket Activity';
+                document.getElementById('engineerFilterLabel').textContent = source === 'tracker' ? 'ENGINEERS' : 'AGENTS';
+
+                if (reload) {
+                    // Clear filters, then reload and render
+                    this.clearAllFilters(); // Clears filters and calls applyFilters/render
+                }
             }
 
             async loadData() {
                 try {
                     if (CONFIG.ENABLE_DEMO) {
-                        this.data = DEMO_DATA;
+                        this.data = this.currentSource === 'tracker' ? DEMO_DATA_TRACKER : DEMO_DATA_FRESHSERVICE;
+                        
+                        const engineerField = this.currentSource === 'freshservice' ? 'Agent Name' : 'Engineer';
+                        
+                        // Dynamically determine available engineers/agents and statuses (FIXED)
+                        const engineerList = this.data.map(d => d[engineerField]).filter(Boolean);
+                        const statusList = this.data.map(d => d.Status).filter(Boolean);
+                        
                         this.metadata = {
-                            engineers: [...new Set(DEMO_DATA.map(d => d.Engineer))].sort(),
-                            tasks: [...new Set(DEMO_DATA.map(d => d.Task))].sort(),
-                            statuses: [...new Set(DEMO_DATA.map(d => d.Status))].sort()
+                            engineers: [...new Set(engineerList)].sort(),
+                            statuses: [...new Set(statusList)].sort()
                         };
                     } else {
+                        // Real API calls (as suggested in the previous response)
                         if (!CONFIG.APPS_SCRIPT_URL || !CONFIG.API_KEY) {
                             throw new Error('Missing CONFIG: APPS_SCRIPT_URL or API_KEY');
                         }
 
                         const [dataRes, metaRes] = await Promise.all([
-                            fetch(`${CONFIG.APPS_SCRIPT_URL}?action=getData&key=${CONFIG.API_KEY}`),
-                            fetch(`${CONFIG.APPS_SCRIPT_URL}?action=getMetadata&key=${CONFIG.API_KEY}`)
+                            fetch(`${CONFIG.APPS_SCRIPT_URL}?action=getData&source=${this.currentSource}&key=${CONFIG.API_KEY}`),
+                            fetch(`${CONFIG.APPS_SCRIPT_URL}?action=getMetadata&source=${this.currentSource}&key=${CONFIG.API_KEY}`)
                         ]);
 
                         const data = await dataRes.json();
@@ -598,8 +609,12 @@
             applyFilters() {
                 let filtered = [...this.data];
 
+                // Dynamic Field Selection (FIXED)
+                const engineerField = this.currentSource === 'freshservice' ? 'Agent Name' : 'Engineer';
+                const dateField = this.currentSource === 'freshservice' ? 'Created Date' : 'Start Date';
+
                 if (this.filters.engineers.length > 0) {
-                    filtered = filtered.filter(item => this.filters.engineers.includes(item.Engineer));
+                    filtered = filtered.filter(item => this.filters.engineers.includes(item[engineerField]));
                 }
 
                 if (this.filters.statuses.length > 0) {
@@ -609,15 +624,18 @@
                 if (this.filters.dateRange.start && this.filters.dateRange.end) {
                     const start = new Date(this.filters.dateRange.start);
                     const end = new Date(this.filters.dateRange.end);
+                    
                     filtered = filtered.filter(item => {
-                        const date = new Date(item['Start Date']);
-                        return date >= start && date <= end;
+                        const date = new Date(item[dateField]);
+                        // Check if item date is between start and end date (inclusive)
+                        return date >= start && date <= end; 
                     });
                 }
 
                 this.filteredData = filtered;
             }
 
+            // Other filter methods remain the same, calling applyFilters/render
             toggleEngineerFilter(engineer) {
                 const idx = this.filters.engineers.indexOf(engineer);
                 if (idx > -1) {
@@ -671,10 +689,21 @@
                 }
             }
 
+            // Dynamic Metrics Calculation (FIXED)
             getMetrics() {
-                const completed = this.filteredData.filter(d => d.Status === 'Completed').length;
-                const inProgress = this.filteredData.filter(d => d.Status === 'In Progress').length;
-                const blocked = this.filteredData.filter(d => d.Status === 'Blocked').length;
+                const completedStatuses = this.currentSource === 'freshservice' ? ['Resolved', 'Closed'] : ['Completed'];
+                const inProgressStatuses = this.currentSource === 'freshservice' ? ['Open', 'Pending', 'On Hold'] : ['In Progress', 'Not Started'];
+                // For Freshservice, 'Blocked' is often represented by a high-priority, open ticket or a specific status.
+                const highPriorityOpenStatuses = this.currentSource === 'freshservice' 
+                    ? this.filteredData.filter(d => d.Status === 'Open' && d.Priority === 'High') 
+                    : [];
+                
+                const completed = this.filteredData.filter(d => completedStatuses.includes(d.Status)).length;
+                const inProgress = this.filteredData.filter(d => inProgressStatuses.includes(d.Status)).length;
+                const blocked = this.currentSource === 'tracker' 
+                    ? this.filteredData.filter(d => d.Status === 'Blocked').length
+                    : highPriorityOpenStatuses.length;
+
                 const total = this.filteredData.length;
 
                 return {
@@ -686,16 +715,22 @@
                 };
             }
 
+            // Dynamic Engineer Stats Calculation (FIXED)
             getEngineerStats() {
                 const stats = {};
+                const engineerField = this.currentSource === 'freshservice' ? 'Agent Name' : 'Engineer';
+                const completedStatuses = this.currentSource === 'freshservice' ? ['Resolved', 'Closed'] : ['Completed'];
+                
                 this.filteredData.forEach(item => {
-                    if (!stats[item.Engineer]) {
-                        stats[item.Engineer] = { total: 0, completed: 0, inProgress: 0, blocked: 0 };
+                    const name = item[engineerField];
+                    if (!name) return;
+                    
+                    if (!stats[name]) {
+                        stats[name] = { total: 0, completed: 0, inProgress: 0, blocked: 0 };
                     }
-                    stats[item.Engineer].total++;
-                    if (item.Status === 'Completed') stats[item.Engineer].completed++;
-                    if (item.Status === 'In Progress') stats[item.Engineer].inProgress++;
-                    if (item.Status === 'Blocked') stats[item.Engineer].blocked++;
+                    stats[name].total++;
+                    
+                    if (completedStatuses.includes(item.Status)) stats[name].completed++;
                 });
 
                 return Object.entries(stats)
@@ -708,17 +743,26 @@
             }
 
             exportCSV() {
-                const headers = ['Task', 'Sub-Task', 'Engineer', 'Status', 'Start Date', 'Closure Date', 'Blocker/Dependency'];
-                const rows = this.filteredData.map(item => [
-                    item.Task, item['Sub-Task'], item.Engineer, item.Status,
-                    item['Start Date'], item['Closure Date'] || '-', item['Blocker/Dependency'] || '-'
-                ]);
+                let headers, rows;
+                const source = this.currentSource;
+                
+                if (source === 'freshservice') {
+                    // Use the exact columns from the doc
+                    headers = ['ID', 'Type', 'Status', 'Priority', 'Subject', 'Description', 'Requester Name', 'Requester Email', 'Created Date', 'Location', 'Urgency', 'Impact', 'Issue Category', 'Source', 'Resolved Date', 'Closed Date', 'Function', 'Survey Score', 'Maximum Survey Score', 'Agent Name'];
+                    rows = this.filteredData.map(item => headers.map(header => item[header] || '-'));
+                } else { // tracker
+                    headers = ['Task', 'Sub-Task', 'Engineer', 'Status', 'Start Date', 'Closure Date', 'Blocker/Dependency'];
+                    rows = this.filteredData.map(item => [
+                        item.Task, item['Sub-Task'], item.Engineer, item.Status,
+                        item['Start Date'], item['Closure Date'] || '-', item['Blocker/Dependency'] || '-'
+                    ]);
+                }
 
                 const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = `team-tracker-${new Date().toISOString().split('T')[0]}.csv`;
+                link.download = `${source}-data-${new Date().toISOString().split('T')[0]}.csv`;
                 link.click();
             }
 
@@ -731,18 +775,24 @@
             }
 
             renderFilters() {
-                const engineerHTML = this.metadata.engineers.map(eng => `
+                const engineerList = this.metadata.engineers || [];
+
+                const engineerHTML = engineerList.map(eng => `
                     <button class="filter-chip ${this.filters.engineers.includes(eng) ? 'active' : ''}" onclick="dashboard.toggleEngineerFilter('${eng}')">
                         ${eng}
                     </button>
                 `).join('');
                 document.getElementById('engineerFilters').innerHTML = engineerHTML;
 
-                const statusHTML = this.metadata.statuses.map(status => `
-                    <button class="filter-chip ${this.filters.statuses.includes(status) ? 'active' : ''}" onclick="dashboard.toggleStatusFilter('${status}')">
-                        ${status}
-                    </button>
-                `).join('');
+                const statusHTML = (this.metadata.statuses || []).map(status => {
+                    // Normalize status names for CSS class generation
+                    const cssClass = status.toLowerCase().replace(/\s+/g, '-');
+                    return `
+                        <button class="filter-chip ${this.filters.statuses.includes(status) ? 'active' : ''}" onclick="dashboard.toggleStatusFilter('${status}')">
+                            ${status}
+                        </button>
+                    `;
+                }).join('');
                 document.getElementById('statusFilters').innerHTML = statusHTML;
 
                 if (this.filters.dateRange.start && this.filters.dateRange.end) {
@@ -752,22 +802,28 @@
 
             renderStats() {
                 const metrics = this.getMetrics();
+                
+                // Dynamic Labels (FIXED)
+                const completedLabel = this.currentSource === 'tracker' ? 'Completed Tasks' : 'Resolved/Closed';
+                const inProgressLabel = this.currentSource === 'tracker' ? 'In Progress' : 'Open / Pending';
+                const blockedLabel = this.currentSource === 'tracker' ? 'Blocked' : 'High Priority Open';
+
                 const statsHTML = `
                     <div class="stat-card">
                         <div class="stat-number">${metrics.total}</div>
-                        <div class="stat-label">Total Tasks</div>
+                        <div class="stat-label">Total Items</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number" style="color: #10b981;">${metrics.completed}</div>
-                        <div class="stat-label">Completed</div>
+                        <div class="stat-number" style="color: var(--accent-green);">${metrics.completed}</div>
+                        <div class="stat-label">${completedLabel}</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-number" style="color: var(--primary-color);">${metrics.inProgress}</div>
-                        <div class="stat-label">In Progress</div>
+                        <div class="stat-label">${inProgressLabel}</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-number" style="color: #ef4444;">${metrics.blocked}</div>
-                        <div class="stat-label">Blocked</div>
+                        <div class="stat-label">${blockedLabel}</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-number" style="color: var(--primary-color);">${metrics.completionRate}%</div>
@@ -779,10 +835,12 @@
 
             renderEngineerCards() {
                 const engineers = this.getEngineerStats();
+                const cardSubtitleText = this.currentSource === 'tracker' ? 'tasks completed' : 'items resolved/closed';
+                
                 const cardsHTML = engineers.map(eng => `
                     <div class="card">
                         <div class="card-title">${eng.name}</div>
-                        <div class="card-subtitle">${eng.completed} of ${eng.total} tasks completed</div>
+                        <div class="card-subtitle">${eng.completed} of ${eng.total} ${cardSubtitleText}</div>
                         <div class="progress-bar">
                             <div class="progress-fill" style="width: ${eng.rate}%"></div>
                         </div>
@@ -799,42 +857,76 @@
                 if (this.filteredData.length === 0) {
                     document.getElementById('tableContent').innerHTML = `
                         <div class="empty-state">
-                            <div class="empty-state-icon" style="color: var(--primary-color);">📦</div>
-                            <div class="empty-state-title">No Tasks Found</div>
-                            <p>Try adjusting your filters</p>
+                            <div class="empty-state-icon">📭</div>
+                            <div class="empty-state-title" style="color: var(--text-light);">No Items Found</div>
+                            <p style="color: var(--text-muted);">Try adjusting your filters or switching the data source.</p>
                         </div>
                     `;
                     return;
                 }
 
-                const tableHTML = `
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Task</th>
-                                <th>Sub-Task</th>
-                                <th>Engineer</th>
-                                <th>Status</th>
-                                <th>Start Date</th>
-                                <th>End Date</th>
-                                <th>Notes</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${this.filteredData.map(item => `
+                let tableHTML;
+                
+                if (this.currentSource === 'freshservice') {
+                    // Freshservice Table Structure (FIXED)
+                    tableHTML = `
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td><strong>${item.Task}</strong></td>
-                                    <td>${item['Sub-Task']}</td>
-                                    <td>${item.Engineer}</td>
-                                    <td><span class="badge badge-${item.Status.toLowerCase().replace(/\s+/g, '-')}">${item.Status}</span></td>
-                                    <td>${item['Start Date']}</td>
-                                    <td>${item['Closure Date'] || '–'}</td>
-                                    <td>${item['Blocker/Dependency'] || '–'}</td>
+                                    <th>ID / Subject</th>
+                                    <th>Agent Name</th>
+                                    <th>Status</th>
+                                    <th>Priority / Type</th>
+                                    <th>Created Date</th>
+                                    <th>Closed Date</th>
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
+                            </thead>
+                            <tbody>
+                                ${this.filteredData.map(item => `
+                                    <tr>
+                                        <td><strong>#${item.ID || 'N/A'}</strong>: ${item.Subject || 'No Subject'}</td>
+                                        <td>${item['Agent Name'] || 'Unassigned'}</td>
+                                        <td><span class="badge badge-${item.Status.toLowerCase().replace(/\s+/g, '-')}">${item.Status}</span></td>
+                                        <td>${item.Priority || '–'} / ${item.Type || '–'}</td>
+                                        <td>${item['Created Date'] || '–'}</td>
+                                        <td>${item['Closed Date'] || '–'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                } else { // tracker
+                    // Tracker Table Structure
+                    tableHTML = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Sub-Task</th>
+                                    <th>Engineer</th>
+                                    <th>Status</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${this.filteredData.map(item => `
+                                    <tr>
+                                        <td><strong>${item.Task || '–'}</strong></td>
+                                        <td>${item['Sub-Task'] || '–'}</td>
+                                        <td>${item.Engineer || '–'}</td>
+                                        <td><span class="badge badge-${item.Status.toLowerCase().replace(/\s+/g, '-')}">${item.Status}</span></td>
+                                        <td>${item['Start Date'] || '–'}</td>
+                                        <td>${item['Closure Date'] || '–'}</td>
+                                        <td>${item['Blocker/Dependency'] || '–'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+                
                 document.getElementById('tableContent').innerHTML = tableHTML;
             }
         }
